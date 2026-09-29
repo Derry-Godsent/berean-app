@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, ChevronDown, Quote, Share2, Users } from "lucide-react";
 import { sermon, passages } from "../data/berean";
-import { Card, EASE, Label, Meter, Pill } from "./ui";
+import { Card, EASE, Label, Meter, Pill, SampleBanner } from "./ui";
 
 export default function Sunday() {
   const [open, setOpen] = useState<string | null>(sermon.mainKey);
@@ -10,6 +10,7 @@ export default function Sunday() {
 
   return (
     <div className="flex flex-col gap-5">
+      <SampleBanner what="This Sunday view" />
       <Card className="overflow-hidden p-6">
         <Label>/ Sunday → Monday</Label>
         <h2 className="mt-3 font-fraunces text-[28px] font-semibold leading-tight text-parchment">

@@ -19,13 +19,13 @@ export function verseOfDay() {
   return verses[dayIndex() % verses.length];
 }
 
-export function useCountdown(target: Date) {
+export function useCountdown(target: Date | null) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
-  const diff = Math.max(0, target.getTime() - now);
+  const diff = target ? Math.max(0, target.getTime() - now) : 0;
   return {
     d: Math.floor(diff / 86400000),
     h: Math.floor((diff / 3600000) % 24),
@@ -33,22 +33,4 @@ export function useCountdown(target: Date) {
     s: Math.floor((diff / 1000) % 60),
     done: diff === 0,
   };
-}
-
-export function useTicker(items: string[], ms = 3200) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const id = window.setInterval(() => setI((x) => (x + 1) % items.length), ms);
-    return () => window.clearInterval(id);
-  }, [items.length, ms]);
-  return items[i];
-}
-
-export function useLiveCount(base: number) {
-  const [n, setN] = useState(base);
-  useEffect(() => {
-    const id = window.setInterval(() => setN((x) => Math.max(base - 400, x + Math.round((Math.random() - 0.45) * 40))), 2500);
-    return () => window.clearInterval(id);
-  }, [base]);
-  return n;
 }

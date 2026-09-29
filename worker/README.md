@@ -40,3 +40,10 @@ Never put an AI key in the app code: everything in the app is public and readabl
 
 Reading, seasons, games, the Room, offline library, progress, the pastor's
 sermon builder and the church insights all work with no server at all.
+
+## Before real users touch this
+
+This worker is a **prototype**: it accepts requests from any website, needs no login and
+has no rate limit, so anyone who learns its URL can spend your AI budget. The production
+design (authenticated, per-user quota, verified Bible references) is in
+[docs/02-ARCHITECTURE.md](../docs/02-ARCHITECTURE.md#ai-ask-a-gateway-not-a-widget).

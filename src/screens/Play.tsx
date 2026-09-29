@@ -5,6 +5,7 @@ import { useApp, wa, dateKey } from "../app/store";
 import { wordleWords, trivia, timelineEvents } from "../data/games";
 import { verses, dayIndex, parseRef } from "../data/bible";
 import { EASE } from "../berean/ui";
+import { siteUrl } from "../app/site";
 
 const shuffle = <T,>(a: T[]) => {
   const b = [...a];
@@ -143,7 +144,7 @@ function Wordle() {
             <p className="font-fraunces text-2xl font-semibold">{won ? `Solved in ${guesses.length}! 🎉` : `The word was ${target.w}`}</p>
             <p className="mt-1 font-newsreader text-sm text-mist">Read where it appears: {target.ref}</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <a href={wa(`Berean Daily Word ${won ? guesses.length : "X"}/6 📖\n\n${grid}\n\nCan you beat me? berean.app/play`)} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-wa px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-night">
+              <a href={wa(`Berean Daily Word ${won ? guesses.length : "X"}/6 📖\n\n${grid}\n\nCan you beat me? ${siteUrl()}`)} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-wa px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-night">
                 <MessageCircle className="h-3.5 w-3.5" /> Share grid
               </a>
               <button
@@ -233,7 +234,7 @@ function Quiz() {
         <p className="mt-3 font-fraunces text-5xl font-semibold">{points}</p>
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-mist">Bible IQ points</p>
         <div className="mt-6 flex justify-center gap-2">
-          <a href={wa(`I scored ${points} on Berean Bible IQ 🧠📖\n\nThink you know your Bible better? berean.app/play`)} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-wa px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-night">
+          <a href={wa(`I scored ${points} on Berean Bible IQ 🧠📖\n\nThink you know your Bible better? ${siteUrl()}`)} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-wa px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-night">
             <MessageCircle className="h-3.5 w-3.5" /> Challenge friends
           </a>
           <button onClick={restart} className="flex items-center gap-2 rounded-full border border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em]">

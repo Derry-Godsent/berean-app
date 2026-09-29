@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Heart, MapPin, MessageCircle, Send, UserPlus, Flame } from "lucide-react";
 import { cellGroup } from "../data/berean";
-import { Avatar, Card, Label, Meter, Pill, StreakRing, useBerean } from "./ui";
+import { Avatar, Card, Label, Meter, Pill, StreakRing, useBerean, SampleBanner } from "./ui";
+import { siteUrl } from "../app/site";
 
 export default function Group() {
   const { prayers, addPrayer } = useBerean();
@@ -12,11 +13,12 @@ export default function Group() {
   const waiting = cellGroup.members.filter((m) => !m.read);
 
   const nudgeText = encodeURIComponent(
-    `Good evening ${waiting.map((w) => w.name.split(" ")[0]).join(", ")} 🤍\n\nAdenta Cell is on a ${cellGroup.groupStreak}-day streak and today's reading (Psalm 1:1-3, "The Tree By The Water") is only 6 minutes. Don't let us break it — read now: berean.app/today\n\n— ${cellGroup.name}`
+    `Good evening ${waiting.map((w) => w.name.split(" ")[0]).join(", ")} 🤍\n\n${cellGroup.name} is on a ${cellGroup.groupStreak}-day streak and today's reading (Psalm 1:1-3, "The Tree By The Water") is only 6 minutes. Don't let us break it — read now on Berean.\n\n— ${cellGroup.name}`
   );
 
   return (
     <div className="flex flex-col gap-5">
+      <SampleBanner what="The cell group" />
       <Card className="p-5">
         <div className="flex items-start gap-5">
           <StreakRing value={cellGroup.groupStreak} label="group streak" size={104} />
@@ -51,7 +53,7 @@ export default function Group() {
           </a>
           <a
             href={`https://wa.me/?text=${encodeURIComponent(
-              `You're invited to ${cellGroup.name} 🤍\n\nWe meet ${cellGroup.meeting}. Join our reading plan on Berean — 6 minutes a day: berean.app/join/${cellGroup.church
+              `You're invited to ${cellGroup.name} 🤍\n\nWe meet ${cellGroup.meeting}. Join our reading plan on Berean — 6 minutes a day: ${siteUrl()}/join/${cellGroup.church
                 .toLowerCase()
                 .replace(/\s+/g, "-")}`
             )}`}

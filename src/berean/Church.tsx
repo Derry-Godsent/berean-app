@@ -8,7 +8,8 @@ import {
   Users,
 } from "lucide-react";
 import { church } from "../data/berean";
-import { Card, EASE, Label, Meter, Pill } from "./ui";
+import { Card, EASE, Label, Meter, Pill, SampleBanner } from "./ui";
+import { siteUrl } from "../app/site";
 
 const week = [
   { d: "Mon", v: 38 },
@@ -25,6 +26,7 @@ export default function Church() {
 
   return (
     <div className="flex flex-col gap-5">
+      <SampleBanner what="The church dashboard" />
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -195,7 +197,7 @@ export default function Church() {
               </div>
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `Blessings ${v.name.split(" ")[0]} 🤍 We're so glad you worshipped with us at ${church.name}. Here's this week's scripture thread — it takes 6 minutes: berean.app/join`
+                  `Blessings ${v.name.split(" ")[0]} 🤍 We're so glad you worshipped with us at ${church.name}. Here's this week's scripture thread — it takes 6 minutes: ${siteUrl()}/join`
                 )}`}
                 target="_blank"
                 rel="noreferrer"

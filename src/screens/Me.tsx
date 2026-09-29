@@ -31,7 +31,7 @@ import { ask, askEndpoint, setAskEndpoint } from "../app/ask";
 import { books, TOTAL_CHAPTERS, parseRef, bookById } from "../data/bible";
 import { seasons } from "../data/seasons";
 import { seasonProgress } from "../app/helpers";
-import { StreakRing, EASE } from "../berean/ui";
+import { StreakRing, EASE, InstallCard } from "../berean/ui";
 
 const fmtBytes = (b: number) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
@@ -629,21 +629,19 @@ export default function Me() {
         {tab === "offline" && <OfflineTab />}
       </div>
 
+      <InstallCard className="mt-6" />
+
       <section className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-line/60 p-4">
-        <p className="flex-1 font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
-          Prototype controls · progress, questions and saved Scripture stay on this device
+        <p className="min-w-[14rem] flex-1 text-[13px] leading-relaxed text-mist">
+          Your progress, questions and notes are saved only on this device. There is no account yet.
         </p>
         <button
-          onClick={app.resetNew}
+          onClick={() => {
+            if (window.confirm("Erase all your progress, questions and settings on this device? This cannot be undone.")) app.eraseData();
+          }}
           className="flex items-center gap-2 rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] hover:border-gold/50"
         >
-          <RotateCcw className="h-3 w-3" /> Start as a new user
-        </button>
-        <button
-          onClick={app.resetDemo}
-          className="flex items-center gap-2 rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] hover:border-gold/50"
-        >
-          <RotateCcw className="h-3 w-3" /> Load demo profile
+          <RotateCcw className="h-3 w-3" /> Erase my data on this device
         </button>
       </section>
     </div>

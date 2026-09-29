@@ -6,6 +6,7 @@ import {
   Flame,
   Gamepad2,
   Globe2,
+  Heart,
   Home,
   Mic2,
   MessagesSquare,
@@ -15,7 +16,7 @@ import {
 import { useApp, type Screen } from "./store";
 import { useProfile } from "./profile";
 import { SkinSwitch, useTheme } from "./theme";
-import { nextEpisode, useCountdown, useLiveCount, verseOfDay } from "./helpers";
+import { nextEpisode, useCountdown, verseOfDay } from "./helpers";
 import Onboarding from "../screens/Onboarding";
 import { nextPremiere } from "../data/seasons";
 import { parseRef } from "../data/bible";
@@ -30,6 +31,7 @@ const NAV: { id: Screen; label: string; Icon: typeof Home; mobile?: boolean }[] 
   { id: "journey", label: "Journey", Icon: Globe2 },
   { id: "studio", label: "Pastor Studio", Icon: Mic2 },
   { id: "me", label: "My Journey", Icon: User },
+  { id: "support", label: "Support Berean", Icon: Heart },
 ];
 
 function Mirror({ paused }: { paused: boolean }) {
@@ -139,12 +141,14 @@ function Mirror({ paused }: { paused: boolean }) {
 }
 
 function PremiereMini() {
-  const t = useCountdown(nextPremiere());
+  const premiere = nextPremiere();
+  const t = useCountdown(premiere?.at ?? null);
   const { go } = useApp();
+  if (!premiere) return null;
   return (
     <button onClick={() => go("seasons")} className="w-full border border-ember/40 bg-night2 p-4 text-left transition-colors hover:border-ember">
-      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-ember">Season 5 premiere</p>
-      <p className="mt-1 font-fraunces text-lg font-semibold text-parchment">Fire 🔥</p>
+      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-ember">Season {premiere.season.n} premiere</p>
+      <p className="mt-1 font-fraunces text-lg font-semibold text-parchment">{premiere.season.title}</p>
       <p className="mt-2 font-mono text-sm tabular-nums text-parchment">
         {t.d}d {String(t.h).padStart(2, "0")}:{String(t.m).padStart(2, "0")}:{String(t.s).padStart(2, "0")}
       </p>
@@ -157,7 +161,6 @@ export default function Shell({ children }: { children: ReactNode }) {
   const { profile } = useProfile();
   const { skin } = useTheme();
   const [intro, setIntro] = useState(() => !profile);
-  const live = useLiveCount(18432);
 
   return (
     <div className={`berean-app theme-${skin} min-h-svh bg-night text-parchment`}>
@@ -181,17 +184,12 @@ export default function Shell({ children }: { children: ReactNode }) {
               >
                 <Icon className="h-4 w-4" />
                 <span className="font-newsreader text-[16px]">{label}</span>
-                {id === "room" && <span className="ml-auto h-2 w-2 rounded-full bg-ember" />}
               </button>
             );
           })}
         </nav>
         <div className="mt-auto space-y-3">
           <PremiereMini />
-          <p className="px-2 font-mono text-[9px] uppercase tracking-[0.18em] text-mist">
-            <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-sage" />
-            {live.toLocaleString()} reading now
-          </p>
         </div>
       </aside>
 
@@ -206,9 +204,6 @@ export default function Shell({ children }: { children: ReactNode }) {
             {NAV.find((n) => n.id === app.screen)?.label}
           </p>
           <div className="ml-auto flex items-center gap-1.5">
-            <span className="hidden items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-mist sm:flex lg:hidden">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sage" /> {live.toLocaleString()} live
-            </span>
             <SkinSwitch compact />
             <button
               onClick={() => app.go("me")}
@@ -224,6 +219,9 @@ export default function Shell({ children }: { children: ReactNode }) {
             </button>
             <button onClick={() => app.go("studio")} className={`rounded-full p-2 lg:hidden ${app.screen === "studio" ? "text-gold" : "text-mist"}`} aria-label="Pastor Studio">
               <Mic2 className="h-4 w-4" />
+            </button>
+            <button onClick={() => app.go("support")} className={`rounded-full p-2 lg:hidden ${app.screen === "support" ? "text-gold" : "text-mist"}`} aria-label="Support Berean">
+              <Heart className="h-4 w-4" />
             </button>
             <button onClick={() => app.go("me")} className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/40 bg-gold/10 font-mono text-[10px] text-gold" aria-label="My journey">
               ME

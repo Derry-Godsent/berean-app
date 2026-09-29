@@ -4,6 +4,12 @@ Berean is an interactive Bible-reading web application. It combines Scripture
 reading, story seasons, questions, games, history, community discussion,
 offline downloads and a pastor workspace.
 
+## Project docs
+
+The plan for turning this prototype into a funded, store-ready product lives in
+[`docs/`](docs/README.md): assessment, architecture, funding, mobile launch, product
+and roadmap.
+
 ## Source code
 
 The editable source is in this project:
@@ -14,7 +20,9 @@ The editable source is in this project:
 - `src/app/` contains state, themes, offline storage, sync and the answer engine
 - `src/data/` contains the Bible metadata and authored content
 - `public/images/` contains the artwork
-- `worker/` contains the optional AI answer service
+- `worker/` contains the optional AI answer service (prototype; see docs before public use)
+- `supabase/` contains the backend schema and its security tests
+- `capacitor.config.ts` wraps the build as a native Android/iOS app
 
 If your coding workspace has a Files panel, download the project folder from
 there. A Git repository is the best long-term home for the source: upload this
@@ -30,6 +38,13 @@ npm run dev
 ```
 
 Open the local URL printed by Vite.
+
+## Checks
+
+```sh
+npm run typecheck   # TypeScript
+npm run test:db     # runs the database schema and tries to break its security rules
+```
 
 ## Production build
 

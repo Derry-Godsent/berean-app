@@ -7,10 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { seedMessages, type Msg } from "../data/community";
+import type { Msg } from "../data/community";
 import { episodeById } from "../data/seasons";
 
-export type Screen = "home" | "seasons" | "read" | "play" | "journey" | "room" | "studio" | "me";
+export type Screen = "home" | "seasons" | "read" | "play" | "journey" | "room" | "studio" | "me" | "support";
 
 export interface ReaderLoc {
   bookId: string;
@@ -45,6 +45,8 @@ interface Persisted {
 interface AppState extends Persisted {
   screen: Screen;
   reader: ReaderLoc;
+  /** The last chapter this person opened on this device, if any. */
+  lastPlace: ReaderLoc | null;
   roomChannel: string;
   go: (s: Screen) => void;
   openReader: (loc: ReaderLoc) => void;
@@ -64,15 +66,16 @@ interface AppState extends Persisted {
   removeQuestion: (id: string) => void;
   postMessage: (channel: string, text: string) => Msg;
   react: (channel: string, id: string, kind: "pray" | "fire" | "heart") => void;
-  resetDemo: () => void;
-  resetNew: () => void;
+  /** Erase everything Berean has saved on this device. */
+  eraseData: () => void;
   streak: number;
   readToday: boolean;
   daysSinceRead: number | null;
   today: string;
 }
 
-const KEY = "berean:app:v2";
+// v3: earlier versions seeded a fake demo profile; those saves are not carried over.
+const KEY = "berean:app:v3";
 
 export function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -84,27 +87,15 @@ function daysAgo(n: number) {
   return dateKey(d);
 }
 
-function demoState(): Persisted {
-  const done = ["s1e1", "s1e2", "s1e3", "s1e4", "s1e5", "s1e6", "s2e1", "s2e2", "s2e3"];
-  const chaptersRead = done
-    .map((id) => episodeById(id))
-    .filter(Boolean)
-    .map((e) => `${e!.bookId}:${e!.chapter}`);
+/** A brand-new reader: nothing read, nothing saved, nothing pretended. */
+function emptyState(): Persisted {
   return {
-    done,
-    chaptersRead: [...new Set([...chaptersRead, "PSA:1", "PSA:23", "JHN:3", "PHP:4"])],
-    readDates: [1, 2, 3, 4, 5, 6].map(daysAgo),
-    highlights: { "Matthew 6:21": "gold", "Proverbs 3:5": "sage" },
-    questions: [
-      {
-        id: "demo-q1",
-        q: "What does “mammon” mean?",
-        a: "An Aramaic word for wealth or money — Jesus pictures it as a rival master.",
-        ref: "Matthew 6:24",
-        at: Date.now() - 86400000,
-      },
-    ],
-    messages: seedMessages,
+    done: [],
+    chaptersRead: [],
+    readDates: [],
+    highlights: {},
+    questions: [],
+    messages: {},
     translation: "kjv",
     fontScale: 1,
     paper: false,
@@ -114,36 +105,45 @@ function demoState(): Persisted {
   };
 }
 
-function freshState(): Persisted {
-  return {
-    ...demoState(),
-    done: [],
-    chaptersRead: [],
-    readDates: [],
-    highlights: {},
-    questions: [],
-    remind: false,
-    mirrorSeen: "",
-  };
-}
-
 function load(): Persisted {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...demoState(), ...JSON.parse(raw) };
+    if (raw) return { ...emptyState(), ...JSON.parse(raw) };
   } catch {
     /* ignore */
   }
-  return demoState();
+  return emptyState();
+}
+
+const NAV_KEY = "berean:app:v3:nav";
+const SCREENS: Screen[] = ["home", "seasons", "read", "play", "journey", "room", "studio", "me", "support"];
+
+/** Where the reader was last: restored after a refresh or when the app is reopened. */
+function loadNav(): { screen: Screen; reader: ReaderLoc | null; roomChannel: string } {
+  try {
+    const raw = localStorage.getItem(NAV_KEY);
+    if (raw) {
+      const n = JSON.parse(raw);
+      const screen: Screen = SCREENS.includes(n.screen) ? n.screen : "home";
+      const reader: ReaderLoc | null = n.reader && typeof n.reader.bookId === "string" ? n.reader : null;
+      // Never restore into the reader with no place to restore to.
+      return { screen: screen === "read" && !reader ? "home" : screen, reader, roomChannel: typeof n.roomChannel === "string" ? n.roomChannel : "room" };
+    }
+  } catch {
+    /* ignore */
+  }
+  return { screen: "home", reader: null, roomChannel: "room" };
 }
 
 const Ctx = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [p, setP] = useState<Persisted>(load);
-  const [screen, setScreen] = useState<Screen>("home");
-  const [reader, setReader] = useState<ReaderLoc>({ bookId: "LUK", chapter: 16, episodeId: "s2e4" });
-  const [roomChannel, setRoomChannel] = useState<string>("room");
+  const [nav0] = useState(loadNav);
+  const [screen, setScreen] = useState<Screen>(nav0.screen);
+  const [reader, setReader] = useState<ReaderLoc>(nav0.reader ?? { bookId: "JHN", chapter: 1 });
+  const [roomChannel, setRoomChannel] = useState<string>(nav0.roomChannel);
+  const [hasPlace, setHasPlace] = useState(nav0.reader !== null);
   const [roomDraft, setRoomDraft] = useState("");
 
   useEffect(() => {
@@ -153,6 +153,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       /* storage full or unavailable */
     }
   }, [p]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(NAV_KEY, JSON.stringify({ screen, reader: hasPlace ? reader : null, roomChannel }));
+    } catch {
+      /* ignore */
+    }
+  }, [screen, reader, roomChannel, hasPlace]);
 
   const today = dateKey();
   const readToday = p.readDates.includes(today);
@@ -185,6 +193,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const openReader = useCallback((loc: ReaderLoc) => {
     setReader(loc);
+    setHasPlace(true);
     setScreen("read");
     window.scrollTo({ top: 0 });
   }, []);
@@ -283,6 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ...p,
     screen,
     reader,
+    lastPlace: hasPlace ? reader : null,
     roomChannel,
     roomDraft,
     setRoomDraft,
@@ -302,8 +312,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     removeQuestion,
     postMessage,
     react,
-    resetDemo: () => setP(demoState()),
-    resetNew: () => setP(freshState()),
+    eraseData: () => {
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("berean:"))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch {
+        /* ignore */
+      }
+      // Reload so every provider (theme, profile, progress) starts clean.
+      window.location.reload();
+    },
     streak,
     readToday,
     daysSinceRead,
