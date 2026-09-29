@@ -3,11 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, Lock, MessageCircle, Play } from "lucide-react";
 import { useApp, wa } from "../app/store";
 import { seasonProgress, useCountdown } from "../app/helpers";
-import { seasons, type Season } from "../data/seasons";
+import { accentOf, seasons, type Season } from "../data/seasons";
+import { useTheme } from "../app/theme";
 import { EASE } from "../berean/ui";
 
 function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
   const app = useApp();
+  const { skin } = useTheme();
+  const accent = accentOf(s, skin);
   const at = s.premiereAt ? new Date(s.premiereAt) : null;
   const t = useCountdown(at);
   const pct = seasonProgress(s, app.done);
@@ -26,7 +29,7 @@ function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
           <button onClick={onBack} className="mb-24 flex items-center gap-2 rounded-full border border-parchment/20 bg-night/40 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] backdrop-blur-md">
             <ArrowLeft className="h-3 w-3" /> All seasons
           </button>
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-gold">Season {s.n} · {s.genre}</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em]" style={{ color: accent }}>Season {s.n} · {s.genre}</p>
           <h1 className="mt-2 font-fraunces text-[clamp(2.4rem,7vw,4.2rem)] font-semibold leading-none">{s.title}</h1>
           <p className="mt-3 max-w-xl font-fraunces text-lg italic text-parchment/80">{s.tagline}</p>
 
@@ -40,7 +43,7 @@ function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
               <a href={wa(`I'm reading Season ${s.n} “${s.title}” on Berean — ${s.tagline}\n\nI'm ${pct}% through. Catch up with me? 👀`)} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-wa px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-night">
                 <MessageCircle className="h-4 w-4" /> Challenge a friend
               </a>
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-gold">{pct}% complete</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: accent }}>{pct}% complete</span>
             </div>
           )}
 
@@ -81,16 +84,21 @@ function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
                   disabled={locked}
                   onClick={() => app.openReader({ bookId: e.bookId, chapter: e.chapter, episodeId: e.id })}
                   className={`group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-colors sm:p-5 ${
-                    isNext ? "border-gold/50 bg-gold/[0.06]" : "border-line/80 bg-night2/60 hover:border-gold/30"
+                    isNext ? "bg-night3/60" : "border-line/80 bg-night2/60 hover:border-gold/30"
                   } ${locked ? "cursor-not-allowed opacity-60" : ""}`}
+                  style={isNext ? { borderColor: accent } : undefined}
                 >
                   <span className="w-8 shrink-0 pt-1 font-fraunces text-3xl font-semibold text-mist/60">{e.n}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-fraunces text-xl font-semibold">{e.title}</p>
-                      {isNext && <span className="rounded bg-gold px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-night">Up next</span>}
+                      {isNext && (
+                        <span className="rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider" style={{ borderColor: accent, color: accent }}>
+                          Up next
+                        </span>
+                      )}
                     </div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-gold/80">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: accent }}>
                       {e.book} {e.chapter} · {e.minutes} min
                     </p>
                     <p className="mt-2 font-newsreader text-[15px] leading-relaxed text-mist">{locked ? "Unlocks at the premiere." : e.synopsis}</p>
@@ -110,6 +118,7 @@ function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
 
 export default function Seasons() {
   const app = useApp();
+  const { skin } = useTheme();
   const [open, setOpen] = useState<string | null>(null);
   const s = seasons.find((x) => x.id === open);
 
@@ -143,17 +152,21 @@ export default function Seasons() {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-night via-night/20 to-transparent" />
+                {/* The season's own colour, right across the top of its poster. */}
+                <span aria-hidden className="absolute inset-x-0 top-0 h-[3px]" style={{ background: accentOf(x, skin) }} />
                 <div className="absolute left-4 top-4">
                   {x.status === "soon" && <span className="rounded border border-parchment/30 bg-night/60 px-2 py-1 font-mono text-[9px] uppercase tracking-wider">Coming soon</span>}
                   {x.status === "live" && seasonProgress(x, app.done) === 100 && <span className="rounded bg-sage px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-night">Completed</span>}
                 </div>
                 <div className="absolute inset-x-4 bottom-4">
-                  <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-gold">Season {x.n} · {x.episodes.length || "?"} episodes</p>
+                  <p className="font-mono text-[9px] uppercase tracking-[0.2em]" style={{ color: accentOf(x, skin) }}>
+                    Season {x.n} · {x.episodes.length || "?"} episodes
+                  </p>
                   <p className="font-fraunces text-2xl font-semibold leading-tight">{x.title}</p>
                   <p className="mt-1 line-clamp-2 font-newsreader text-sm text-parchment/70">{x.tagline}</p>
                   {x.status === "live" && (
                     <div className="mt-3 h-1 overflow-hidden rounded-full bg-parchment/20">
-                      <div className="h-full bg-gold" style={{ width: `${seasonProgress(x, app.done)}%` }} />
+                      <div className="h-full" style={{ background: accentOf(x, skin), width: `${seasonProgress(x, app.done)}%` }} />
                     </div>
                   )}
                 </div>

@@ -159,9 +159,9 @@ Pages, see `docs/04-MOBILE-LAUNCH.md`). Gifts are not "keeping the lights on"; t
 | # | Step | Cost | Running total |
 |---|---|---|---|
 | 1 | A real web address (domain) | ~$12 / year (estimate) | $12 |
-| 2 | Three months of accounts and live rooms (Supabase Pro, ~$25/mo) | ~$75 (estimate) | $87 |
+| 2 | Always-on accounts and live rooms, three months (Supabase Pro, ~$25/mo). Can start on the free plan | ~$75 (estimate) | $87 |
 | 3 | Google Play developer account | $25 once | $112 |
-| 4 | Three months of instant answers (AI) | ~$60 (estimate) | $172 |
+| 4 | Instant answers that keep up, three months (AI). Can start on a free plan | ~$60 (estimate) | $172 |
 | 5 | Apple Developer Program, year one | $99 / year | $271 |
 | Later | A licensed modern translation, if you want one beyond BSB/WEB/KJV | ≈ $39/mo (published price lists) | n/a |
 
@@ -175,6 +175,19 @@ than "help me build a Bible app".
 
 Beyond that: a **reserve of three months** first, licensed translations next, then paying for
 your own time. Publish your pay policy honestly, even if it is "none yet".
+
+### "If nobody gives, does it stop working?"
+
+**No** — and the page can say so plainly. Berean is a website installed from the browser, so
+hosting it costs nothing today, and reading, seasons, games and the device-local room do not
+depend on gifts at all. Nothing switches off when the meter stands still, and nothing unlocks
+when it moves: a gift buys time, not access.
+
+What a lack of gifts changes is **pace**, never the reader. Each step above happens only once its
+money is in, so no gifts means: the link stays long (1), accounts and live rooms stay *opening
+soon* (2), instant answers wait (4), and iPhone and Android users keep installing from the browser
+(3, 5). That is the same app, minus the next thing. If gifts stopped completely, the plan is to
+keep the reader free and quiet rather than put Scripture behind a paywall or ask harder.
 
 *Illustrative scenarios, not forecasts:*
 
@@ -230,6 +243,15 @@ logo under your own licence. Decide slowly, because it is hard to undo.
 - Offer **non-money help** first: share, test, translate, introduce your church. Many who
   can't give will do these; later they're also what Google Play's 12-tester rule needs.
 - Thank publicly (opt-in), promptly, personally.
+- **The lamp is the only mark that means "give".** One amber bulb (`src/berean/Lamp.tsx`,
+  `--color-lamp`) appears in four places: the header on phones, the sidebar item on desktop, a
+  quiet card at the foot of Home, and the top of the funding page. It pulses while it is lit —
+  and stops for anyone whose device asks for reduced motion, because a pulse nobody asked for is
+  a nag rather than a lamp. Red-letter oxblood stays reserved for reading and calls to action, so
+  amber never has to compete with it.
+- **The Home card obeys principle 3.** It sits at the very bottom, never interrupts, and its
+  "Not now" is remembered (`berean:lamp-ask` in local storage) permanently. Once dismissed, the
+  only route back to the page is the menu and the URL.
 
 ## 9 · Implementation status
 
