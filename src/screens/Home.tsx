@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Bell, BellRing } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useApp, wa } from "../app/store";
-import { nextEpisode, seasonProgress, useCountdown, useTicker, verseOfDay } from "../app/helpers";
+import { nextEpisode, seasonProgress, useCountdown, verseOfDay } from "../app/helpers";
 import { seasons, nextPremiere } from "../data/seasons";
-import { pulse } from "../data/community";
+import { bookById } from "../data/bible";
 import { TOTAL_CHAPTERS, parseRef } from "../data/bible";
 import { TaggedText } from "../app/tags";
-import { EASE } from "../berean/ui";
+import { EASE, InstallCard } from "../berean/ui";
 
 function Section({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
   return (
@@ -21,17 +21,64 @@ function Section({ title, note, children }: { title: string; note?: string; chil
   );
 }
 
+function PremiereSection({ season, at }: { season: { n: number; title: string; tagline: string }; at: Date }) {
+  const t = useCountdown(at);
+  return (
+    <Section title="Premiere" note={at.toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" })}>
+      <div className="border border-line bg-night2 p-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end">
+          <div className="flex-1">
+            <p className="font-fraunces text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight">
+              Season {season.n}: {season.title}
+            </p>
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-mist">{season.tagline}</p>
+          </div>
+          <div className="flex gap-2">
+            {[
+              [t.d, "days"],
+              [t.h, "hrs"],
+              [t.m, "min"],
+              [t.s, "sec"],
+            ].map(([v, l]) => (
+              <div key={l as string} className="w-[68px] border border-line bg-night px-2 py-3 text-center">
+                <p className="font-mono text-[26px] leading-none tabular-nums text-parchment">{String(v).padStart(2, "0")}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-mist">{l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 export default function Home() {
   const app = useApp();
   const next = nextEpisode(app.done);
-  const tick = useTicker(pulse);
   const votd = verseOfDay();
-  const t = useCountdown(nextPremiere());
+  const premiere = nextPremiere();
   const hero = next?.season ?? seasons[0];
   const lastMsg = app.messages.room?.[app.messages.room.length - 1];
 
   return (
     <div className="space-y-12">
+      <InstallCard />
+
+      {app.lastPlace && (
+        <button
+          onClick={() => app.openReader(app.lastPlace!)}
+          className="flex w-full items-center justify-between gap-4 border border-line bg-night2 px-5 py-4 text-left transition-colors hover:border-gold"
+        >
+          <span>
+            <span className="block font-mono text-[11px] text-gold">Pick up where you left off</span>
+            <span className="mt-1 block font-fraunces text-[20px] font-semibold text-parchment">
+              {bookById(app.lastPlace.bookId)?.name ?? app.lastPlace.bookId} {app.lastPlace.chapter}
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 text-gold" />
+        </button>
+      )}
+
       {/* Hero: the episode you are in the middle of */}
       <section>
         <div className="relative overflow-hidden border border-line bg-night3">
@@ -72,9 +119,6 @@ export default function Home() {
               <button onClick={() => app.go("seasons")} className="border border-parchment/30 px-6 py-3.5 text-[14px] text-parchment transition-colors hover:border-parchment">
                 All episodes
               </button>
-              <span className="font-mono text-[11px] text-mist">
-                {hero.watching.toLocaleString()} reading this season
-              </span>
             </div>
           </div>
         </div>
@@ -86,14 +130,6 @@ export default function Home() {
           {seasonProgress(hero, app.done)}% of Season {hero.n} read
         </p>
       </section>
-
-      {/* Live pulse */}
-      <div className="flex items-center gap-4 border-y border-line py-3">
-        <span className="font-mono text-[11px] text-gold">Right now</span>
-        <motion.p key={tick} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 flex-1 truncate text-[15px] text-mist">
-          {tick}
-        </motion.p>
-      </div>
 
       {/* Honest reminder */}
       {!app.readToday && (
@@ -139,7 +175,7 @@ export default function Home() {
                 )}
                 {s.status !== "live" && (
                   <span className="absolute left-0 top-0 bg-parchment px-2 py-1 font-mono text-[10px] text-night">
-                    {s.status === "premiere" ? "Premieres Sunday" : "In production"}
+                    In production
                   </span>
                 )}
               </div>
@@ -211,64 +247,23 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* Premiere */}
-      <Section title="Premiere" note="Sunday, 18:00">
-        <div className="border border-line bg-night2 p-6">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end">
-            <div className="flex-1">
-              <p className="font-fraunces text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight">
-                Season 5: Fire
-              </p>
-              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-mist">
-                One hundred and twenty people in an upper room, waiting. Then wind and fire. Everyone
-                reads episode one together when it airs.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {[
-                [t.d, "days"],
-                [t.h, "hrs"],
-                [t.m, "min"],
-                [t.s, "sec"],
-              ].map(([v, l]) => (
-                <div key={l as string} className="w-[68px] border border-line bg-night px-2 py-3 text-center">
-                  <p className="font-mono text-[26px] leading-none tabular-nums text-parchment">
-                    {String(v).padStart(2, "0")}
-                  </p>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-mist">{l}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-line pt-4">
-            <button
-              onClick={() => app.setRemind(!app.remind)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-[13px] transition-colors ${
-                app.remind ? "bg-gold text-night" : "border border-line text-parchment hover:border-gold hover:text-gold"
-              }`}
-            >
-              {app.remind ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-              {app.remind ? "Reminder set" : "Remind me"}
-            </button>
-            <span className="font-mono text-[11px] text-mist">
-              {(12408 + (app.remind ? 1 : 0)).toLocaleString()} people waiting
-            </span>
-          </div>
-        </div>
-      </Section>
+      {/* Premiere: only when a real date is scheduled */}
+      {premiere && <PremiereSection season={premiere.season} at={premiere.at} />}
 
       {/* The Room */}
-      <Section title="The Room" note="Where everyone reads together">
+      <Section title="The Room" note="Opening soon">
         <button onClick={() => app.go("room")} className="block w-full border border-line bg-night2 p-6 text-left transition-colors hover:bg-night">
-          {lastMsg && (
+          {lastMsg ? (
             <>
-              <p className="font-mono text-[11px] text-mist">
-                {lastMsg.user} · {lastMsg.city} {lastMsg.flag} · {lastMsg.time}
-              </p>
+              <p className="font-mono text-[11px] text-mist">You · {lastMsg.time}</p>
               <p className="mt-2 line-clamp-2 font-fraunces text-[19px] leading-relaxed">
                 <TaggedText text={lastMsg.text} />
               </p>
             </>
+          ) : (
+            <p className="font-fraunces text-[19px] leading-relaxed text-mist">
+              Live rooms are opening soon. Until then you can write here; what you post stays on this device.
+            </p>
           )}
           <p className="mt-4 border-t border-line pt-3 font-mono text-[11px] text-gold">
             Type / to mention a book, a chapter or an episode

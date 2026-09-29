@@ -12,7 +12,7 @@ import Journey from "../screens/Journey";
 import Room from "../screens/Room";
 import Studio from "../screens/Studio";
 import Me from "../screens/Me";
-import { stopLenis } from "../lib/scroll";
+import Support from "../screens/Support";
 
 function Screens() {
   const { screen } = useApp();
@@ -31,6 +31,8 @@ function Screens() {
       return <Studio />;
     case "me":
       return <Me />;
+    case "support":
+      return <Support />;
     default:
       return <Home />;
   }
@@ -38,7 +40,6 @@ function Screens() {
 
 export default function Berean() {
   useEffect(() => {
-    stopLenis();
     document.title = "Berean — The Bible, in seasons";
   }, []);
 

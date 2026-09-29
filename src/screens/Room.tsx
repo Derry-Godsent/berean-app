@@ -1,22 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Clapperboard, Eye, Hash, Radio, Send, ShieldAlert } from "lucide-react";
+import { BookOpen, Clapperboard, Eye, Hash, Info, Send, ShieldAlert } from "lucide-react";
 import { useApp } from "../app/store";
 import { TaggedText } from "../app/tags";
 import { channels, type Msg } from "../data/community";
 import { books } from "../data/bible";
 import { allEpisodes, episodeById } from "../data/seasons";
-import { useLiveCount } from "../app/helpers";
 import Group from "../berean/Group";
-import { broadcast, subscribeBus, tabId, usePresence } from "../app/realtime";
 import { EASE } from "../berean/ui";
-
-const REPLIES: Omit<Msg, "id" | "time" | "reactions">[] = [
-  { user: "Kwame", city: "Accra", flag: "🇬🇭", color: "#dfb256", text: "Amen 🙏 that's exactly what I needed today." },
-  { user: "Grace", city: "Lagos", flag: "🇳🇬", color: "#86a68f", text: "Yesss 🔥 I was thinking the same thing when I read it." },
-  { user: "Sarah", city: "London", flag: "🇬🇧", color: "#8fb3e0", text: "Ooh good point — hadn't seen it like that. Going back to read it again." },
-  { user: "Miguel", city: "São Paulo", flag: "🇧🇷", color: "#c792ea", text: "This is why I love this room 🙌" },
-];
 
 function Message({ m, channel }: { m: Msg; channel: string }) {
   const { done, react } = useApp();
@@ -31,7 +22,7 @@ function Message({ m, channel }: { m: Msg; channel: string }) {
       </span>
       <div className={`min-w-0 max-w-[85%] ${m.mine ? "items-end text-right" : ""} flex flex-col`}>
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-mist">
-          {m.user} {m.pastor && <span className="ml-1 rounded bg-gold px-1 text-[8px] text-night">Pastor</span>} · {m.city} {m.flag} · {m.time}
+          {m.mine ? "You" : m.user} {m.pastor && <span className="ml-1 rounded bg-gold px-1 text-[8px] text-night">Pastor</span>}{!m.mine && ` · ${m.city} ${m.flag}`} · {m.time}
         </p>
         <div className={`relative mt-1 rounded-2xl px-4 py-3 text-left font-newsreader text-[16px] leading-relaxed ${m.mine ? "rounded-tr-md bg-gold/15 text-parchment" : "rounded-tl-md border border-line/80 bg-night2/80"}`}>
           <div className={locked ? "select-none blur-md" : ""}>
@@ -68,25 +59,8 @@ export default function Room() {
   const app = useApp();
   const { roomChannel: ch, setRoomChannel, roomDraft, setRoomDraft } = app;
   const [text, setText] = useState(roomDraft);
-  const [extra, setExtra] = useState<Record<string, Msg[]>>({});
-  const [typing, setTyping] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const online = useLiveCount(ch === "s2" ? 3120 : 18432);
-  const windows = usePresence();
-
-  // Live sync: messages posted in any open window appear here instantly.
-  useEffect(() => {
-    return subscribeBus((m) => {
-      if (m.from === tabId || m.type !== "message") return;
-      const incoming = { ...(m.payload as Msg), mine: false };
-      setExtra((x) => {
-        const cur = x[m.channel] ?? [];
-        if (cur.some((k) => k.id === incoming.id)) return x;
-        return { ...x, [m.channel]: [...cur, incoming] };
-      });
-    });
-  }, []);
 
   useEffect(() => {
     if (roomDraft) {
@@ -96,11 +70,11 @@ export default function Room() {
     }
   }, [roomDraft, setRoomDraft]);
 
-  const list = useMemo(() => [...(app.messages[ch] ?? []), ...(extra[ch] ?? [])], [app.messages, extra, ch]);
+  const list = app.messages[ch] ?? [];
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [list.length, typing]);
+  }, [list.length]);
 
   // slash autocomplete
   const slash = text.match(/\/([1-3]?\s?[A-Za-z]*\s?[A-Za-z]*)$/);
@@ -123,18 +97,8 @@ export default function Room() {
   const send = (e: FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
-    const sent = app.postMessage(ch, text.trim());
-    broadcast({ type: "message", channel: ch, payload: sent, from: tabId });
+    app.postMessage(ch, text.trim());
     setText("");
-    const r = REPLIES[Math.floor(Math.random() * REPLIES.length)];
-    setTimeout(() => setTyping(r.user), 900);
-    setTimeout(() => {
-      setTyping(null);
-      setExtra((x) => ({
-        ...x,
-        [ch]: [...(x[ch] ?? []), { ...r, id: Math.random().toString(36), time: "now", reactions: { pray: 0, fire: 0, heart: 0 } }],
-      }));
-    }, 2800);
   };
 
   const current = channels.find((c) => c.id === ch) ?? channels[0];
@@ -173,27 +137,21 @@ export default function Room() {
               </p>
               <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-mist">{current.desc}</p>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-sage">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sage" /> {online.toLocaleString()} online
-              </span>
-              <span className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.15em] text-mist" title="Messages sync live between open windows of this app">
-                <Radio className="h-3 w-3 text-gold" /> live sync · {windows} {windows === 1 ? "window" : "windows"}
-              </span>
-            </div>
           </div>
 
           <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-5">
+            <div className="flex items-start gap-2 border-l-2 border-gold bg-night2 p-3 text-[13px] leading-relaxed text-mist">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+              <p>Live rooms are opening soon. For now this is a private notebook: what you write here stays on this device, and nobody else can see it.</p>
+            </div>
+            {list.length === 0 && (
+              <p className="py-10 text-center font-newsreader text-[17px] text-mist">
+                Nothing here yet. Write a first thought about today's reading.
+              </p>
+            )}
             {list.map((m) => (
               <Message key={m.id} m={m} channel={ch} />
             ))}
-            <AnimatePresence>
-              {typing && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
-                  {typing} is typing…
-                </motion.p>
-              )}
-            </AnimatePresence>
             <div ref={endRef} />
           </div>
 
@@ -217,7 +175,7 @@ export default function Room() {
                 ref={inputRef}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Say something… type / to tag John 3:16 or S2E4"
+                placeholder="Write a note… type / to tag John 3:16 or S2E4"
                 className="min-w-0 flex-1 rounded-full border border-line bg-night px-4 py-3 font-newsreader text-[16px] text-parchment placeholder:text-mist/60 focus:border-gold/50 focus:outline-none"
               />
               <button type="submit" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold text-night" aria-label="Send">

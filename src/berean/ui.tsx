@@ -1,3 +1,4 @@
+import { useInstall } from "../app/install";
 import {
   createContext,
   useCallback,
@@ -152,6 +153,15 @@ export function Label({ children, className = "" }: { children: ReactNode; class
   );
 }
 
+/** Shown above screens that still run on made-up data, so nobody mistakes them for real people. */
+export function SampleBanner({ what = "This screen" }: { what?: string }) {
+  return (
+    <div role="note" className="border border-dashed border-line bg-night2 px-3 py-2 font-mono text-[11px] leading-relaxed text-mist">
+      Sample preview: {what} shows made-up names and numbers to demonstrate how it will work. It is not connected to real people yet.
+    </div>
+  );
+}
+
 export function Pill({
   children,
   tone = "line",
@@ -252,3 +262,32 @@ export function Avatar({ initials, read }: { initials: string; read: boolean }) 
 }
 
 export const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+/** Invites people to put Berean on their home screen. Renders nothing when it can't help. */
+export function InstallCard({ className = "" }: { className?: string }) {
+  const s = useInstall();
+  if (s.kind === "hidden") return null;
+  return (
+    <div className={`flex flex-col gap-3 border border-line bg-night2 p-4 sm:flex-row sm:items-center ${className}`}>
+      <Mark className="h-7 w-7 shrink-0 text-gold" />
+      <div className="min-w-0 flex-1">
+        <p className="font-fraunces text-[18px] font-semibold leading-snug text-parchment">Keep Berean on your phone</p>
+        <p className="mt-0.5 text-[14px] leading-relaxed text-mist">
+          {s.kind === "ios"
+            ? "Tap the Share button at the bottom of Safari, then choose “Add to Home Screen”. It opens like an app and works offline."
+            : "Add it to your home screen. It opens like an app, works offline, and takes almost no space."}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {s.kind === "prompt" && (
+          <button onClick={s.install} className="bg-parchment px-4 py-2.5 text-[13px] font-medium text-night hover:bg-gold">
+            Install
+          </button>
+        )}
+        <button onClick={s.dismiss} className="px-3 py-2.5 text-[13px] text-mist hover:text-parchment">
+          Not now
+        </button>
+      </div>
+    </div>
+  );
+}

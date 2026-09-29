@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Lock, MessageCircle, Play, Users } from "lucide-react";
+import { ArrowLeft, Check, Lock, MessageCircle, Play } from "lucide-react";
 import { useApp, wa } from "../app/store";
 import { seasonProgress, useCountdown } from "../app/helpers";
-import { seasons, nextPremiere, type Season } from "../data/seasons";
+import { seasons, type Season } from "../data/seasons";
 import { EASE } from "../berean/ui";
 
 function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
   const app = useApp();
-  const t = useCountdown(nextPremiere());
+  const at = s.premiereAt ? new Date(s.premiereAt) : null;
+  const t = useCountdown(at);
   const pct = seasonProgress(s, app.done);
   const next = s.episodes.find((e) => !app.done.includes(e.id));
 
@@ -28,9 +29,6 @@ function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-gold">Season {s.n} · {s.genre}</p>
           <h1 className="mt-2 font-fraunces text-[clamp(2.4rem,7vw,4.2rem)] font-semibold leading-none">{s.title}</h1>
           <p className="mt-3 max-w-xl font-fraunces text-lg italic text-parchment/80">{s.tagline}</p>
-          <p className="mt-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-mist">
-            <Users className="h-3 w-3" /> {s.watching.toLocaleString()} people reading this season worldwide
-          </p>
 
           {s.status === "live" && (
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -46,29 +44,23 @@ function Detail({ s, onBack }: { s: Season; onBack: () => void }) {
             </div>
           )}
 
-          {s.status === "premiere" && (
-            <div className="mt-6">
-              <div className="grid max-w-md grid-cols-4 gap-2">
-                {[
-                  [t.d, "days"],
-                  [t.h, "hrs"],
-                  [t.m, "min"],
-                  [t.s, "sec"],
-                ].map(([v, l]) => (
-                  <div key={l as string} className="rounded-xl border border-ember/40 bg-night/60 py-3 text-center backdrop-blur-md">
-                    <p className="font-fraunces text-3xl font-semibold tabular-nums">{String(v).padStart(2, "0")}</p>
-                    <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-mist">{l}</p>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => app.setRemind(!app.remind)} className={`mt-4 flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] ${app.remind ? "bg-ember text-night" : "border border-ember/50 text-ember"}`}>
-                {app.remind ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                {app.remind ? "Reminder set" : "Remind me at premiere"}
-              </button>
+          {s.status === "soon" && at && at.getTime() > Date.now() && (
+            <div className="mt-6 grid max-w-md grid-cols-4 gap-2">
+              {[
+                [t.d, "days"],
+                [t.h, "hrs"],
+                [t.m, "min"],
+                [t.s, "sec"],
+              ].map(([v, l]) => (
+                <div key={l as string} className="rounded-xl border border-ember/40 bg-night/60 py-3 text-center backdrop-blur-md">
+                  <p className="font-fraunces text-3xl font-semibold tabular-nums">{String(v).padStart(2, "0")}</p>
+                  <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-mist">{l}</p>
+                </div>
+              ))}
             </div>
           )}
 
-          {s.status === "soon" && <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-parchment/70">In production · Coming later</p>}
+          {s.status === "soon" && <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-parchment/70">In production · Not yet released</p>}
         </div>
       </section>
 
@@ -152,7 +144,6 @@ export default function Seasons() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-night via-night/20 to-transparent" />
                 <div className="absolute left-4 top-4">
-                  {x.status === "premiere" && <span className="rounded bg-ember px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-night">Premieres Sunday</span>}
                   {x.status === "soon" && <span className="rounded border border-parchment/30 bg-night/60 px-2 py-1 font-mono text-[9px] uppercase tracking-wider">Coming soon</span>}
                   {x.status === "live" && seasonProgress(x, app.done) === 100 && <span className="rounded bg-sage px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-night">Completed</span>}
                 </div>
