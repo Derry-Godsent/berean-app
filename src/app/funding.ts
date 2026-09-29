@@ -77,9 +77,9 @@ export interface Milestone {
 
 const steps: Omit<Milestone, "cumulativeUsd">[] = [
   { id: "domain", label: "A real web address", why: "So the link to Berean is short and yours, instead of a long free address.", usd: 12, estimate: true },
-  { id: "rooms", label: "Three months of accounts and live rooms", why: "Sign-in, saving your progress across phones, and chat rooms with real people.", usd: 75, estimate: true },
+  { id: "rooms", label: "Always-on accounts and live rooms, three months", why: "Sign-in, saving your progress across phones, and chat rooms with real people. It can start on a free plan, so this pays for the three months after that.", usd: 75, estimate: true },
   { id: "play", label: "Google Play", why: "A one-time fee that puts Berean in the Android store.", usd: 25 },
-  { id: "ai", label: "Three months of instant answers", why: "The 'ask about any verse' feature answers with AI, which costs money per question.", usd: 60, estimate: true },
+  { id: "ai", label: "Instant answers that keep up, three months", why: "The 'ask about any verse' feature answers with AI, which costs money per question. It can start on a free plan too; this pays for three months once people are asking every day.", usd: 60, estimate: true },
   { id: "apple", label: "Apple App Store, first year", why: "$99 a year to be on iPhones' store. Until then, iPhone users install from the browser.", usd: 99 },
 ];
 
