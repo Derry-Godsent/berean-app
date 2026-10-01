@@ -97,9 +97,9 @@ flowchart LR
 
 | Idea | Impact | Effort | Phase | Notes |
 |---|---|---|---|---|
-| Sermon builder → publish to congregation, all verses linked | H | 🟡 | 3 | UI exists; data and publishing don't |
-| Auto weekly reading plan + cell questions from a sermon | **H** | M | 3 | The Monday half of the loop |
-| Aggregate congregation insights | H | M | 3 | Opt-in and privacy-safe by design already |
+| Sermon builder → publish to congregation, all verses linked | H | 🟡 | 3 | The builder and the Sunday → Monday view exist and run on the pastor's own saved outline with real references; **publishing and member data need accounts** |
+| Auto weekly reading plan + cell questions from a sermon | **H** | 🟡 | 3 | Generated today from the real topic table; it becomes "auto" when it can follow a live sermon |
+| Aggregate congregation insights | H | M | 3 | Opt-in and privacy-safe by design already. **Today the screen shows this device's real numbers and says plainly that nobody is connected** — no invented congregation |
 | Announcements and prayer routing to groups | M | S | 3 | |
 | Sermon audio/transcript upload, AI study guide (reviewed) | M | L | 4 | |
 | Pastor verification, church branding, multiple campuses | M | M | 3–4 | Trust and B2B polish |

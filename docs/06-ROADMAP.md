@@ -33,7 +33,7 @@ raising money.
 - [x] Backend schema written and security-tested (`supabase/`, `npm run test:db`)
 - [x] Funding page with milestones, config, founder-note draft
 - [x] **Portfolio moved out** to its own project (`/home/user/portfolio-site` in this workspace; copy it to its own repo)
-- [x] **Fake numbers and simulated people removed** (reader counts, "watching", live ticker, chat bot, demo profile, fake premiere). Screens still running on sample data (cell group, church, Sunday) carry a "Sample preview" banner
+- [x] **Fake numbers and simulated people removed** (reader counts, "watching", live ticker, chat bot, demo profile, fake premiere). The Pastor Studio was finished on 2026-10-01: the `sermon`/`church` fixtures are deleted, Sunday → Monday runs on the pastor's own saved outline, and Church insights shows this device's real numbers plus an honest "needs accounts" panel. The cell-group view in the Room still carries a "Sample preview" banner
 - [x] **Fonts bundled**; `vite-plugin-singlefile` dropped
 - [x] **PWA:** manifest, service worker, icons, install card, iOS home-screen tags, `_headers`
 - [ ] **Deploy** to Cloudflare Pages *(your action; I have no access)*
