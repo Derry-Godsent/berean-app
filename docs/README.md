@@ -25,6 +25,8 @@ product people install to their phones, funded by people around the world.
 | Complete backend schema for Supabase (Postgres): 32 tables, 3 views, 58 row-level-security policies, streaks, groups, chat, prayer, moderation, quizzes, sermons, funding ledger | `supabase/migrations/0001_init.sql` |
 | 36 automated security checks that run the schema in an in-process Postgres and try to break it | `supabase/tests/rls.test.mjs` → `npm run test:db` |
 | A public **"Keep the lamp lit"** funding page, at `#/support` and inside the app | `src/screens/Support.tsx` |
+| The **lamp** itself: one amber bulb marking support — glowing sidebar item, a lit button in the mobile header, a card at the foot of Home, a large bulb at the top of the funding page. It pulses, and stops for reduced-motion users | `src/berean/Lamp.tsx` |
+| **A colour per season**: each season carries its own accent (deep tone on paper, bright tone on charcoal) through Home and Seasons | `src/data/seasons.ts` (`accent`, `accentOf`) |
 | **The path**: everyone starts at Season 1, Episode 1; seasons unlock in order as the one before is finished; begun seasons are never taken away and the Bible itself is never locked | `src/app/seasonPath.ts` |
 | All giving links and costs in one config file, with per-platform store-policy gating | `src/app/funding.ts`, `src/app/platform.ts` |
 | Capacitor config so the same code builds native Android and iOS apps | `capacitor.config.ts`, `npm run cap:*` |

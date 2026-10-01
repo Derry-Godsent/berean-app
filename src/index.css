@@ -44,6 +44,10 @@ body {
   --color-sage: #4d6b47;
   --color-wa: #1f7a4d;
 
+  /* the lamp: the one amber in Berean. It means "keep the lamp lit" and
+     nothing else, so it never has to compete with the red-letter accent. */
+  --color-lamp: #8a5c0a;
+
   --font-fraunces: "Newsreader", ui-serif, Georgia, serif;
   --font-newsreader: "Newsreader", ui-serif, Georgia, serif;
 }
@@ -70,7 +74,17 @@ body {
   --color-ember: #cf7550;
   --color-sage: #8da282;
   --color-wa: #69a77d;
+  --color-lamp: #f2b95e;
   color-scheme: dark;
+}
+
+/* The halo around a lit bulb. Kept as a separate token so the glow can be
+   warmer on charcoal and softer on paper. */
+.berean-app {
+  --lamp-glow: rgba(178, 122, 20, 0.42);
+}
+.berean-app.theme-dark {
+  --lamp-glow: rgba(242, 185, 94, 0.5);
 }
 
 .berean-app.theme-light {
@@ -136,6 +150,51 @@ body {
 }
 .ring-live {
   animation: berean-pulse 2.4s ease-in-out infinite;
+}
+
+/* The lamp while it is lit: a warm halo that breathes. This is the only
+   pulsing thing in the app, and it holds perfectly still for anyone whose
+   device asks for reduced motion — the bulb stays on, it just stops moving. */
+@keyframes berean-lamp {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.05);
+  }
+}
+/* ...and the bulb itself breathes with it, so the pulse reads at any size. */
+@keyframes berean-lamp-bulb {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.lamp-halo {
+  background: radial-gradient(circle, var(--lamp-glow) 0%, transparent 68%);
+}
+.lamp-pulse {
+  animation: berean-lamp 3.2s ease-in-out infinite;
+}
+.lamp-flicker {
+  animation: berean-lamp-bulb 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lamp-pulse,
+  .lamp-flicker {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .ring-live {
+    animation: none;
+  }
 }
 
 /* Marker-pen highlight */

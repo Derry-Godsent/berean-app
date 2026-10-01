@@ -6,8 +6,8 @@ import {
   Flame,
   Gamepad2,
   Globe2,
-  Heart,
   Home,
+  Lightbulb,
   Mic2,
   MessagesSquare,
   User,
@@ -21,6 +21,10 @@ import Onboarding from "../screens/Onboarding";
 import { nextPremiere } from "../data/seasons";
 import { parseRef } from "../data/bible";
 import { Mark, EASE } from "../berean/ui";
+import { Lamp } from "../berean/Lamp";
+
+/** The one nav entry that carries the lamp (see docs/03-FUNDING.md). */
+const LAMP_SCREEN: Screen = "support";
 
 const NAV: { id: Screen; label: string; Icon: typeof Home; mobile?: boolean }[] = [
   { id: "home", label: "Home", Icon: Home, mobile: true },
@@ -31,7 +35,7 @@ const NAV: { id: Screen; label: string; Icon: typeof Home; mobile?: boolean }[] 
   { id: "journey", label: "Journey", Icon: Globe2 },
   { id: "studio", label: "Pastor Studio", Icon: Mic2 },
   { id: "me", label: "My Journey", Icon: User },
-  { id: "support", label: "Support Berean", Icon: Heart },
+  { id: "support", label: "Support Berean", Icon: Lightbulb },
 ];
 
 function Mirror({ paused }: { paused: boolean }) {
@@ -174,15 +178,23 @@ export default function Shell({ children }: { children: ReactNode }) {
         <nav className="flex flex-col gap-1">
           {NAV.map(({ id, label, Icon }) => {
             const on = app.screen === id;
+            const lamp = id === LAMP_SCREEN;
             return (
               <button
                 key={id}
                 onClick={() => app.go(id)}
                 className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
-                  on ? "bg-gold/12 text-gold" : "text-mist hover:bg-white/[0.03] hover:text-parchment"
+                  lamp
+                    ? on
+                      ? "bg-lamp/12 text-lamp"
+                      : "text-lamp hover:bg-lamp/10"
+                    : on
+                      ? "bg-gold/12 text-gold"
+                      : "text-mist hover:bg-white/[0.03] hover:text-parchment"
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                {/* The lamp keeps glowing in the menu: the only item that is lit. */}
+                {lamp ? <Lamp size={16} glow={2.6} /> : <Icon className="h-4 w-4" />}
                 <span className="font-newsreader text-[16px]">{label}</span>
               </button>
             );
@@ -220,8 +232,14 @@ export default function Shell({ children }: { children: ReactNode }) {
             <button onClick={() => app.go("studio")} className={`rounded-full p-2 lg:hidden ${app.screen === "studio" ? "text-gold" : "text-mist"}`} aria-label="Pastor Studio">
               <Mic2 className="h-4 w-4" />
             </button>
-            <button onClick={() => app.go("support")} className={`rounded-full p-2 lg:hidden ${app.screen === "support" ? "text-gold" : "text-mist"}`} aria-label="Support Berean">
-              <Heart className="h-4 w-4" />
+            {/* The lamp, always lit, on the smallest screens where there is no sidebar. */}
+            <button
+              onClick={() => app.go("support")}
+              className={`rounded-full p-2 lg:hidden ${app.screen === "support" ? "bg-lamp/12" : ""}`}
+              aria-label="Support Berean — keep the lamp lit"
+              title="Keep the lamp lit"
+            >
+              <Lamp size={18} glow={2.2} />
             </button>
             <button onClick={() => app.go("me")} className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/40 bg-gold/10 font-mono text-[10px] text-gold" aria-label="My journey">
               ME

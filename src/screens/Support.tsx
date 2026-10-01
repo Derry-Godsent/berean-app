@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ExternalLink, Heart, Languages, Mail, Share2, Smartphone, Users } from "lucide-react";
 import { Mark, EASE } from "../berean/ui";
+import { Lamp } from "../berean/Lamp";
 import {
   contactEmail,
   founderNote,
@@ -82,7 +83,14 @@ export default function Support() {
     <div className="mx-auto max-w-2xl pb-6">
       <motion.header initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ease: EASE, duration: 0.5 }}>
         <Mark className="h-8 w-8 text-gold" />
-        <h1 className="mt-4 font-fraunces text-[40px] font-semibold leading-[1.05] text-parchment">Keep the lamp lit</h1>
+        {/* The lamp itself, at the top of its own page: large, lit, and to the
+            left so its glow falls into the page instead of off the edge. */}
+        <div className="mt-5 flex items-center gap-4">
+          <Lamp size={56} glow={2.3} strokeWidth={1.4} />
+          <h1 className="font-fraunces text-[34px] font-semibold leading-[1.05] text-parchment sm:text-[40px]">
+            Keep the lamp lit
+          </h1>
+        </div>
         <p className="mt-4 font-newsreader text-[19px] leading-relaxed text-parchment/90">
           Berean is built and looked after by one person. The aim is simple: get more people into the Bible, and keep
           them coming back.
