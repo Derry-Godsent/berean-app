@@ -27,6 +27,7 @@ import { fetchChapter, type ChapterVerse } from "../app/bibleApi";
 import { ask, suggestionsFor, type Answer } from "../app/ask";
 import { books, bookById, glossary, glossaryRegex, parseRef } from "../data/bible";
 import { episodeById, seasons } from "../data/seasons";
+import { episodeLock, episodeState, seasonLock } from "../app/seasonPath";
 import { EASE } from "../berean/ui";
 
 const QUIET = new Set(["thee", "thou", "thy", "thine", "ye", "unto", "hath", "doth", "lo"]);
@@ -387,6 +388,12 @@ export default function Reader() {
   const selRef = selected ? `${book.name} ${reader.chapter}:${selected}` : "";
   const isRead = chaptersRead.includes(`${book.id}:${reader.chapter}`);
   const epDone = episode ? done.includes(episode.id) : false;
+  // A locked episode still shows its chapter — the Bible is never locked — but
+  // it does not count as the episode until the one before it is finished.
+  const epEpState = season && episode ? episodeState(season, episode, done) : null;
+  const epLocked = epEpState === "locked";
+  const epPrev = season && episode ? episodeLock(season, episode, done) : null;
+  const epSeasonLock = season ? seasonLock(season, done) : null;
 
   const go = (delta: number) => {
     let idx = books.findIndex((b) => b.id === book.id);
@@ -402,7 +409,7 @@ export default function Reader() {
   };
 
   const finish = () => {
-    if (episode) {
+    if (episode && !epLocked) {
       completeEpisode(episode.id);
       setFinished(true);
     } else markChapter(book.id, reader.chapter);
@@ -493,6 +500,36 @@ export default function Reader() {
                 <span className="font-semibold text-ember">In this episode: </span>
                 {episode.synopsis}
               </p>
+              {epLocked && (
+                <div className={`mt-4 border-l-2 pl-4 ${paper ? "border-[#9a7c32]" : "border-ember"}`}>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ember">Locked in the path</p>
+                  <p className={`mt-1 font-newsreader text-[15px] leading-relaxed ${txt}`}>
+                    {epPrev
+                      ? `Finish Episode ${epPrev.n}, “${epPrev.title}”, and this one opens.`
+                      : epSeasonLock
+                        ? `Finish Season ${epSeasonLock.season.n}, “${epSeasonLock.season.title}”${
+                            epSeasonLock.remaining === 1
+                              ? " — one episode left."
+                              : ` — ${epSeasonLock.remaining} episodes left.`
+                          }`
+                        : "This episode opens as you go."}
+                  </p>
+                  <p className={`mt-1 font-newsreader text-[14px] leading-relaxed ${sub}`}>
+                    You can read the whole chapter below, mark it read, and ask questions. It just will not stand as the
+                    episode until the one before it is finished.
+                  </p>
+                  {epPrev && (
+                    <button
+                      onClick={() =>
+                        openReader({ bookId: epPrev.bookId, chapter: epPrev.chapter, episodeId: epPrev.id })
+                      }
+                      className="mt-3 inline-flex items-center gap-2 rounded-full border border-ember/50 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ember"
+                    >
+                      <Play className="h-3.5 w-3.5" /> Go to Episode {epPrev.n}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -568,7 +605,7 @@ export default function Reader() {
 
             {/* Finish */}
             <div className="mt-10 flex flex-col items-center gap-4">
-              {episode ? (
+              {episode && !epLocked ? (
                 <button
                   onClick={finish}
                   className={`flex items-center gap-2.5 rounded-full px-7 py-4 font-fraunces text-lg font-semibold transition-transform hover:scale-[1.02] ${
@@ -578,6 +615,15 @@ export default function Reader() {
                   {epDone ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                   {epDone ? "Episode complete · watch again" : `Finish Episode ${episode.n}`}
                 </button>
+              ) : episode && epLocked ? (
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <span className={`flex items-center gap-2.5 rounded-full border px-7 py-4 font-fraunces text-lg font-semibold ${paper ? "border-[#d4c9b0] text-[#6d6255]" : "border-line text-mist"}`}>
+                    Episode {episode.n} has not opened yet
+                  </span>
+                  <button onClick={finish} className={`font-mono text-[10px] uppercase tracking-[0.18em] ${sub} hover:text-gold`}>
+                    Mark this chapter as read instead
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={finish}

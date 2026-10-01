@@ -53,6 +53,27 @@ flowchart LR
 
 ### A. Read it like a movie *(your signature)*
 
+**The path (built 2026-10-01).** Berean is a series, not a shelf, and everyone starts at the same
+place:
+
+- A new reader begins at **Season 1, Episode 1**. The welcome screen, Home, the mirror prompt and
+  the reader all point at the same next episode (`nextEpisode()`), so nothing can start them
+  somewhere else.
+- **Seasons unlock in order.** Season *n* opens when Season *n−1* is finished. Two rules keep it
+  fair: a season that has already been begun is **never** taken away, and the **Bible itself is
+  never locked** — the reader, the verse of the day, the games, saved verses and search stay open
+  at every point.
+- **Inside an unlocked season**, episodes open one after another: finish one and the next is
+  waiting. Locked episodes still let you read the chapter and mark it as read; they just do not
+  stand as the episode.
+- Locks always say **what opens them** ("Finish Season 1 — six episodes left"), pointing at the
+  earliest unfinished season, which is the one the reader can actually work on.
+- Progress is remembered as finished episode ids (`done` in `src/app/store.tsx`), and the path is
+  derived from it in `src/app/seasonPath.ts` — never stored twice, so it cannot drift. On device
+  it lives in `berean:app:v3`; with accounts it is exactly `episode_progress` (plus
+  `reading_progress` for chapters) in `supabase/migrations/0001_init.sql`, so a reader who signs
+  in on a new phone gets their place back.
+
 | Idea | Impact | Effort | Phase | Notes |
 |---|---|---|---|---|
 | Seasons and episodes, "next time on…" | H | done | ✅ | Needs more real content, on a real schedule |
