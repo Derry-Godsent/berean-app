@@ -1,11 +1,16 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, BookOpen, Check, Copy, MessageCircle, Mic2, Quote, Send, Sparkles, Wand2 } from "lucide-react";
+import { BarChart3, BookOpen, Check, Copy, MessageCircle, Mic2, Quote, Save, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { useApp, wa } from "../app/store";
+import { useProfile } from "../app/profile";
 import { books, bookById, parseRef, topics } from "../data/bible";
+import { newSermonId, saveSermon, useSermons, type Sermon } from "../app/sermons";
 import Sunday from "../berean/Sunday";
 import Church from "../berean/Church";
 import { EASE } from "../berean/ui";
+
+const savedWhen = (t: number) =>
+  new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 const kit: Record<string, { hook: string; apply: string[]; ask: string }> = {
   peace: { hook: "What kept you awake at 2am this month?", apply: ["Write down your top three worries and pray over each by name.", "Replace one scrolling session with reading Philippians 4."], ask: "What worry do you need to hand over this week?" },
@@ -24,15 +29,16 @@ const audiences = ["Whole congregation", "Youth & students", "Workers & business
 
 function Builder() {
   const app = useApp();
+  const { profile } = useProfile();
+  const { sermons, remove } = useSermons();
   const [title, setTitle] = useState("Peace For Anxious Days");
   const [topicId, setTopicId] = useState("peace");
   const [bookId, setBookId] = useState("PHP");
   const [chapter, setChapter] = useState(4);
   const [aud, setAud] = useState(audiences[0]);
   const [built, setBuilt] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [published, setPublished] = useState(false);
+  const [saved, setSaved] = useState<Sermon | null>(null);
 
   const topic = topics.find((t) => t.id === topicId)!;
   const k = kit[topicId];
@@ -71,13 +77,40 @@ function Builder() {
     ].join("\n");
 
   const build = () => {
-    setBusy(true);
-    setBuilt(false);
-    setPublished(false);
-    setTimeout(() => {
-      setBusy(false);
-      setBuilt(true);
-    }, 1100);
+    // The outline is assembled from the topic table and the real references in
+    // data/bible.ts. There is no AI call and no fake "thinking" pause.
+    setBuilt(true);
+    setSaved(null);
+    setCopied(false);
+  };
+
+  /** Save the outline to this device so Sunday → Monday can work from it. */
+  const persist = () => {
+    const now = Date.now();
+    const existing = saved ?? sermons.find((s) => s.title === title.trim() && s.mainRef === main);
+    const record: Sermon = {
+      id: existing?.id ?? newSermonId(),
+      title: title.trim() || "Untitled outline",
+      topicId,
+      topicName: topic.name,
+      audience: aud,
+      mainRef: main,
+      bookId,
+      book: book.name,
+      chapter,
+      big: outline.big,
+      hook: k.hook,
+      points: outline.points,
+      apply: k.apply,
+      ask: k.ask,
+      plan: outline.plan,
+      preacher: profile?.name ?? "",
+      church: profile?.church ?? "",
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+    saveSermon(record);
+    setSaved(record);
   };
 
   const RefBtn = ({ r }: { r: string }) => (
@@ -136,28 +169,21 @@ function Builder() {
           </select>
         </label>
         <button onClick={build} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-4 font-fraunces text-lg font-semibold text-night">
-          <Wand2 className="h-5 w-5" /> {busy ? "Building…" : "Build my sermon"}
+          <Wand2 className="h-5 w-5" /> Build my outline
         </button>
         <p className="font-mono text-[9px] uppercase leading-relaxed tracking-[0.15em] text-mist">
-          A starting scaffold, not a finished sermon. The message is yours. Pray, study, and make it personal.
+          A starting scaffold, not a finished sermon. Every reference is real; the message is yours. Pray, study, and make it personal.
         </p>
       </div>
 
       <div>
-        {!built && !busy && (
+        {!built && (
           <div className="flex min-h-[420px] flex-col items-center justify-center rounded-3xl border border-dashed border-line p-8 text-center">
             <Mic2 className="h-10 w-10 text-gold" />
             <p className="mt-4 font-fraunces text-2xl font-semibold">Saturday night, 11pm, no outline?</p>
             <p className="mt-2 max-w-md font-newsreader text-[16px] text-mist">
               Pick a theme and a passage. Get a structured outline, cross-references, an opening hook, applications, cell-group questions and a week-long reading plan for your members.
             </p>
-          </div>
-        )}
-        {busy && (
-          <div className="space-y-3 rounded-3xl border border-line/80 bg-night2/50 p-6">
-            {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="h-4 animate-pulse rounded bg-line/70" style={{ width: `${55 + ((i * 29) % 40)}%` }} />
-            ))}
           </div>
         )}
         <AnimatePresence>
@@ -226,13 +252,13 @@ function Builder() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setPublished(true)}
-                  className={`flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] ${published ? "bg-sage text-night" : "bg-gold text-night"}`}
+                  onClick={persist}
+                  className={`flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] ${saved ? "bg-sage text-night" : "bg-gold text-night"}`}
                 >
-                  {published ? <Check className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-                  {published ? "Published · 248 members notified" : "Publish to congregation"}
+                  {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                  {saved ? "Saved on this device" : "Save outline"}
                 </button>
                 <a href={wa(asText())} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-wa px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-night">
                   <MessageCircle className="h-4 w-4" /> Send outline
@@ -248,9 +274,42 @@ function Builder() {
                   {copied ? <Check className="h-4 w-4 text-sage" /> : <Copy className="h-4 w-4" />} {copied ? "Copied" : "Copy"}
                 </button>
               </div>
+              <p className="font-newsreader text-[13px] leading-relaxed text-mist">
+                Nothing is sent from here by itself. Publishing to your congregation — and seeing who read it — needs
+                accounts, which are the next milestone (<span className="text-parchment">docs/03-FUNDING.md</span> step 2).
+                Until then the outline saves on this device and leaves it only when you send it.
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* The pastor's own outlines, as saved on this device. */}
+        {sermons.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-line/80 bg-night2/60 p-5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-mist">
+              Saved on this device · {sermons.length}
+            </p>
+            <div className="mt-3 flex flex-col divide-y divide-line/60">
+              {sermons.map((s) => (
+                <div key={s.id} className="flex items-center gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-fraunces text-[17px] font-semibold text-parchment">{s.title}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
+                      {s.mainRef} · {s.topicName} · saved {savedWhen(s.updatedAt)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => remove(s.id)}
+                    aria-label={`Delete ${s.title}`}
+                    className="rounded-full border border-line p-2 text-mist transition-colors hover:border-gold/50 hover:text-gold"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -275,7 +334,11 @@ export default function Studio() {
       </div>
       <div className="mt-8">
         {tab === "build" && <Builder />}
-        {tab === "sunday" && <div className="mx-auto max-w-[620px]"><Sunday /></div>}
+        {tab === "sunday" && (
+          <div className="mx-auto max-w-[620px]">
+            <Sunday onBuild={() => setTab("build")} />
+          </div>
+        )}
         {tab === "church" && <div className="mx-auto max-w-[760px]"><Church /></div>}
       </div>
     </div>

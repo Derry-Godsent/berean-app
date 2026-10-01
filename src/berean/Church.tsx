@@ -1,271 +1,204 @@
-import { motion } from "framer-motion";
-import {
-  BellRing,
-  Check,
-  Crown,
-  TrendingUp,
-  UserCheck,
-  Users,
-} from "lucide-react";
-import { church } from "../data/berean";
-import { Card, EASE, Label, Meter, Pill, SampleBanner } from "./ui";
+import { useMemo } from "react";
+import { BarChart3, Check, MessageCircle, TrendingUp, Unplug, Users } from "lucide-react";
+import { useApp, wa } from "../app/store";
+import { useProfile } from "../app/profile";
+import { Card, Label, Meter, Pill, useBerean } from "./ui";
+import { TOTAL_CHAPTERS } from "../data/bible";
+import { allEpisodes } from "../data/seasons";
 import { siteUrl } from "../app/site";
 
-const week = [
-  { d: "Mon", v: 38 },
-  { d: "Tue", v: 44 },
-  { d: "Wed", v: 52 },
-  { d: "Thu", v: 61 },
-  { d: "Fri", v: 47 },
-  { d: "Sat", v: 31 },
-  { d: "Sun", v: 74 },
+/** What the church plan will show once real members are connected. */
+const planned = [
+  { t: "Weekly readers", d: "How many of your congregation opened Scripture this week — and how many did not." },
+  { t: "Cell groups needing encouragement", d: "Which groups are reading together and which have gone quiet." },
+  { t: "Visitors to follow up", d: "First-time worshippers, with a one-tap WhatsApp follow-up." },
+  { t: "Most-read passages", d: "What your people are actually hungry for, useful for planning the next series." },
 ];
 
+/**
+ * Church insights.
+ *
+ * There is no backend in this build, so nothing here can know what a
+ * congregation is doing — and it will not invent it. The numbers shown are the
+ * pastor's own, read from this device; the congregation panel states plainly
+ * what it will show once accounts exist, and stays empty until then.
+ */
 export default function Church() {
-  const gain = church.weeklyReaders - church.beforeBerean;
+  const app = useApp();
+  const { profile } = useProfile();
+  const { saved, prayers, note } = useBerean();
+
+  const readThisWeek = useMemo(() => {
+    const since = Date.now() - 7 * 86400000;
+    return app.readDates.filter((d) => {
+      const t = new Date(`${d}T12:00:00`).getTime();
+      return Number.isFinite(t) && t >= since;
+    }).length;
+  }, [app.readDates]);
+
+  const chapterPct = Math.round((app.chaptersRead.length / TOTAL_CHAPTERS) * 100);
+  const episodePct = allEpisodes.length ? Math.round((app.done.length / allEpisodes.length) * 100) : 0;
+
+  const stats = [
+    { v: `${app.streak}d`, l: "Your streak" },
+    { v: `${readThisWeek}/7`, l: "Days read this week" },
+    { v: String(app.chaptersRead.length), l: `Chapters (of ${TOTAL_CHAPTERS})` },
+    { v: String(app.done.length), l: "Episodes finished" },
+    { v: String(app.questions.length), l: "Questions asked" },
+    { v: String(saved.length), l: "Verses saved" },
+  ];
 
   return (
     <div className="flex flex-col gap-5">
-      <SampleBanner what="The church dashboard" />
+      {/* Your own numbers — the only ones that exist on this device */}
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <Label>/ Pastor's dashboard</Label>
+            <Label>/ Your own reading on this device</Label>
             <h2 className="mt-2 font-fraunces text-[28px] font-semibold leading-tight text-parchment">
-              {church.name}
+              {profile?.name ? `${profile.name}'s Berean` : "Your Berean"}
             </h2>
             <p className="mt-1 font-newsreader text-sm italic text-mist">
-              {church.pastor} · {church.members} members · {church.cells} cell groups
+              {[profile?.church, profile?.city].filter(Boolean).join(" · ") || "Saved on this phone only — no account"}
             </p>
           </div>
-          <Pill tone="gold">
-            <Crown className="h-3 w-3" /> {church.plan} — {church.price}/month
+          <Pill tone="line">
+            <BarChart3 className="h-3 w-3" /> Real numbers, this device
           </Pill>
-        </div>
-      </Card>
-
-      {/* Hero metric */}
-      <Card className="overflow-hidden p-6">
-        <Label>/ The number that matters</Label>
-        <div className="mt-3 flex items-end gap-4">
-          <span className="font-fraunces text-[68px] font-semibold leading-none text-gold">
-            {church.weeklyReaders}%
-          </span>
-          <div className="pb-2">
-            <p className="font-newsreader text-sm text-parchment">
-              of your congregation read the Bible this week
-            </p>
-            <p className="mt-1 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-sage">
-              <TrendingUp className="h-3 w-3" /> +{gain} points vs. before
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
-            <span>Before Berean · {church.beforeBerean}%</span>
-            <span className="text-gold">Now · {church.weeklyReaders}%</span>
-          </div>
-          <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-line">
-            <motion.div
-              className="absolute inset-y-0 left-0 rounded-full bg-mist/40"
-              initial={{ width: 0 }}
-              animate={{ width: `${church.beforeBerean}%` }}
-              transition={{ duration: 0.9, ease: EASE }}
-            />
-            <motion.div
-              className="absolute inset-y-0 left-0 rounded-full bg-gold"
-              initial={{ width: 0 }}
-              animate={{ width: `${church.weeklyReaders}%` }}
-              transition={{ duration: 1.4, delay: 0.3, ease: EASE }}
-            />
-          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4 border-t border-line/70 pt-5 sm:grid-cols-3">
-          {[
-            { v: `${church.avgStreak}d`, l: "Avg. personal streak" },
-            { v: church.minutesWeek.toLocaleString(), l: "Minutes in the Word" },
-            { v: `${church.cells}`, l: "Active cell groups" },
-          ].map((s) => (
+          {stats.map((s) => (
             <div key={s.l}>
-              <p className="font-fraunces text-2xl font-semibold text-parchment">
-                {s.v}
-              </p>
-              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
-                {s.l}
-              </p>
+              <p className="font-fraunces text-2xl font-semibold text-parchment">{s.v}</p>
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-mist">{s.l}</p>
             </div>
           ))}
         </div>
-      </Card>
 
-      {/* Weekly rhythm chart */}
-      <Card className="p-6">
-        <Label>/ Reading rhythm this week</Label>
-        <div className="mt-6 flex h-40 items-end gap-2 sm:gap-3">
-          {week.map((w, i) => (
-            <div key={w.d} className="flex flex-1 flex-col items-center gap-2">
-              <span className="font-mono text-[10px] text-mist">{w.v}%</span>
-              <motion.div
-                className={`w-full rounded-t-md ${
-                  w.d === "Sun" ? "bg-gold" : "bg-gold/35"
-                }`}
-                initial={{ height: 0 }}
-                animate={{ height: `${(w.v / 74) * 110}px` }}
-                transition={{ duration: 0.8, delay: i * 0.06, ease: EASE }}
-              />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-mist">
-                {w.d}
-              </span>
+        <div className="mt-6 space-y-4">
+          <div>
+            <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em]">
+              <span className="text-parchment">Bible read</span>
+              <span className="text-gold">{chapterPct}%</span>
             </div>
-          ))}
+            <Meter pct={chapterPct} />
+          </div>
+          <div>
+            <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em]">
+              <span className="text-parchment">Seasons finished</span>
+              <span className="text-gold">{episodePct}%</span>
+            </div>
+            <Meter pct={episodePct} />
+          </div>
         </div>
+
         <p className="mt-5 border-t border-line/60 pt-4 font-newsreader text-sm italic text-mist">
-          Sunday is a spike; Monday to Saturday is where faith is actually built. The
-          dip is what this app exists to flatten.
+          {prayers.length} prayers and {note ? "a study note" : "no study notes"} are also kept on this phone. A pastor's
+          own habit is the first thing worth measuring — and today it is the only thing Berean can measure.
         </p>
       </Card>
 
-      {/* Passages + cells */}
-      <div className="grid gap-5 md:grid-cols-2">
-        <Card className="p-6">
-          <Label>/ Most-read passages</Label>
-          <div className="mt-5 flex flex-col gap-4">
-            {church.topPassages.map((t) => (
-              <div key={t.ref}>
-                <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em]">
-                  <span className="text-parchment">{t.ref}</span>
-                  <span className="text-gold">{t.pct}%</span>
-                </div>
-                <Meter pct={t.pct} />
-              </div>
-            ))}
-          </div>
-          <p className="mt-5 border-t border-line/60 pt-4 font-newsreader text-sm italic text-mist">
-            What your people are actually hungry for. Useful for planning the next
-            sermon series.
-          </p>
-        </Card>
-
-        <Card className="p-6">
-          <Label>/ Which cells need encouragement</Label>
-          <div className="mt-5 flex flex-col divide-y divide-line/60">
-            {church.cellsActive.map((c) => (
-              <div key={c.name} className="flex items-center gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-newsreader text-[15px] text-parchment">
-                    {c.name}
-                  </p>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
-                    {c.pct}% active · {c.streak}d streak
-                  </p>
-                </div>
-                {c.pct < 55 ? (
-                  <Pill tone="gold">Needs a call</Pill>
-                ) : (
-                  <Check className="h-4 w-4 text-sage" />
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Retention — the B2B gold */}
+      {/* The congregation panel: honest about what does not exist yet */}
       <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <Label>/ Visitors to follow up</Label>
-          <Pill tone="sage">
-            <UserCheck className="h-3 w-3" /> Retention
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Label>/ Congregation</Label>
+            <h2 className="mt-2 font-fraunces text-[26px] font-semibold leading-tight text-parchment">
+              Nobody is connected yet
+            </h2>
+            <p className="mt-1 max-w-xl font-newsreader text-[15px] leading-relaxed text-mist">
+              Berean has no accounts in this build, so it cannot see your members' phones — and it will not invent them.
+              The day real people sign in, this panel fills with real numbers and nothing else.
+            </p>
+          </div>
+          <Pill tone="line">
+            <Unplug className="h-3 w-3" /> Needs accounts
           </Pill>
         </div>
-        <div className="mt-5 flex flex-col gap-3">
-          {church.visitors.map((v) => (
-            <div
-              key={v.name}
-              className="flex flex-wrap items-center gap-3 rounded-xl border border-line/70 bg-night/50 p-4"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/40 font-mono text-[10px] text-gold">
-                {v.name.split(" ").map((n) => n[0]).join("")}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-newsreader text-[15px] text-parchment">{v.name}</p>
-                <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
-                  First visit: {v.first} · {v.follows}
-                </p>
+
+        <div className="mt-5 flex flex-col divide-y divide-line/60">
+          {planned.map((p) => (
+            <div key={p.t} className="flex items-start gap-3 py-3.5">
+              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full border border-mist/60" aria-hidden />
+              <div>
+                <p className="font-newsreader text-[15px] text-parchment">{p.t}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">{p.d}</p>
               </div>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(
-                  `Blessings ${v.name.split(" ")[0]} 🤍 We're so glad you worshipped with us at ${church.name}. Here's this week's scripture thread — it takes 6 minutes: ${siteUrl()}/join`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-wa/40 px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-wa transition-colors hover:bg-wa/10"
-              >
-                Follow up
-              </a>
             </div>
           ))}
         </div>
-        <p className="mt-5 border-t border-line/60 pt-4 font-newsreader text-sm italic text-mist">
-          A visitor who reads during the week is far more likely to come back. That is
-          the sentence you sell to a pastor.
+
+        <p className="mt-5 border-t border-line/60 pt-4 font-newsreader text-sm leading-relaxed text-mist">
+          The data model behind all of it is already written and tested (<span className="text-parchment">supabase/migrations/0001_init.sql</span>,
+          58 row-level-security policies) — it just has nowhere to run yet. That is milestone 2 on the support page.
         </p>
       </Card>
 
-      {/* Send + pricing */}
+      {/* Invite: the one thing that genuinely helps today */}
       <Card className="p-6">
-        <Label>/ Broadcast</Label>
-        <h3 className="mt-2 font-fraunces text-xl font-semibold text-parchment">
-          Send Monday's devotional
-        </h3>
-        <p className="mt-2 font-newsreader text-sm text-mist">
-          One tap reaches {church.members} members. About 12 KB each, roughly 3 minutes of
-          WhatsApp Voice Note worth of data per person.
-        </p>
-        <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-4 font-fraunces text-base font-semibold text-night transition-transform hover:scale-[1.01]">
-          <BellRing className="h-4 w-4" /> Send to all {church.members} members
-        </button>
-
-        <div className="mt-6 rounded-2xl border border-gold/25 bg-gold/[0.06] p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-gold" />
-              <span className="font-fraunces text-lg font-semibold text-parchment">
-                {church.plan} plan
-              </span>
-            </div>
-            <span className="font-fraunces text-2xl font-semibold text-gold">
-              {church.price}
-              <span className="font-mono text-[10px] uppercase tracking-wider text-mist">
-                {" "}
-                /month
-              </span>
-            </span>
-          </div>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {[
-              "Unlimited members & cell groups",
-              "Sermon-to-scripture automation",
-              "Weekly engagement report",
-              "Visitor follow-up list",
-              "Broadcast to WhatsApp",
-              "Your church's own branded space",
-            ].map((f) => (
-              <li
-                key={f}
-                className="flex items-start gap-2 font-newsreader text-sm text-parchment"
-              >
-                <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-gold" />
-                {f}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 border-t border-gold/20 pt-3 font-mono text-[10px] uppercase tracking-[0.15em] text-gold">
-            Members never pay. The church pays.
-          </p>
+        <div className="flex items-center justify-between gap-3">
+          <Label>/ Invite your congregation</Label>
+          <Pill tone="wa">
+            <Users className="h-3 w-3" /> Works today
+          </Pill>
         </div>
+        <p className="mt-3 font-newsreader text-[15px] leading-relaxed text-mist">
+          One tap shares Berean with a member. Everything they read stays on their own phone, and their progress is
+          theirs alone — the same honesty you would want from any app your church uses.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <a
+            href={wa(
+              `Join me on Berean 📖\n\nThe Bible in seasons — short episodes, games, and the scriptures from Sunday linked and ready.\n\n${
+                profile?.code ? `My invite code: ${profile.code}\n\n` : ""
+              }${siteUrl()}`
+            )}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 rounded-full bg-wa px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-night"
+          >
+            <MessageCircle className="h-3.5 w-3.5" /> Share with a member
+          </a>
+          {profile?.code && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
+              Invite code {profile.code}
+            </span>
+          )}
+        </div>
+      </Card>
+
+      {/* The plan, clearly labelled as a plan */}
+      <Card className="p-6">
+        <Label>/ The church plan</Label>
+        <div className="mt-3 flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-gold" />
+          <span className="font-fraunces text-lg font-semibold text-parchment">Coming with accounts — not on sale yet</span>
+        </div>
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {[
+            "Sunday's scriptures linked for every member",
+            "A Monday–Saturday reading plan from your sermon",
+            "Cell-group questions prepared for you",
+            "Weekly engagement report, once accounts exist",
+            "Visitor follow-up list",
+            "Your church's own space on the web",
+          ].map((f) => (
+            <li key={f} className="flex items-start gap-2 font-newsreader text-sm text-parchment">
+              <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-gold" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 flex flex-wrap items-baseline gap-3 border-t border-line/60 pt-4">
+          <span className="font-fraunces text-2xl font-semibold text-gold">GHS 150</span>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-mist">
+            per month, a starting price to test — not a price to keep
+          </span>
+        </div>
+        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.15em] text-gold">
+          Members never pay. The church pays.
+        </p>
       </Card>
     </div>
   );

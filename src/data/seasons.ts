@@ -10,6 +10,16 @@ export interface Episode {
   nextTime: string;
 }
 
+/**
+ * A season's own colour, as a pair: one tone that reads on paper, one that
+ * reads on charcoal. Stored per skin because a single hex cannot be legible on
+ * both — the light tones are deep, the dark tones are warm and bright.
+ */
+export interface SeasonAccent {
+  light: string;
+  dark: string;
+}
+
 export interface Season {
   id: string;
   n: number;
@@ -19,6 +29,8 @@ export interface Season {
   gradient: string;
   status: "live" | "soon";
   genre: string;
+  /** Carried by the season's own labels, progress bars and markers. */
+  accent: SeasonAccent;
   /** ISO date of a real, scheduled premiere. Leave unset until one is actually planned. */
   premiereAt?: string;
   episodes: Episode[];
@@ -46,6 +58,7 @@ export const seasons: Season[] = [
     gradient: "from-[#1b2a44] to-[#0d1117]",
     status: "live",
     genre: "Genesis",
+    accent: { light: "#2f5d8c", dark: "#8ab6e6" },
     episodes: [
       ep(1, 1, "Let There Be Light", "GEN", "Genesis", 1, 5, "Out of darkness and emptiness God speaks, and a universe answers. Light, land, life, and finally humanity, made in His image.", "A garden, a tree, and one rule."),
       ep(1, 2, "The Serpent's Question", "GEN", "Genesis", 3, 5, "“Yea, hath God said…?” One question plants a doubt that changes everything. Hidden inside the curse is a promise, in verse 15.", "Two brothers, two offerings, one jealous heart."),
@@ -64,6 +77,7 @@ export const seasons: Season[] = [
     gradient: "from-[#3a2c12] to-[#0d1117]",
     status: "live",
     genre: "Proverbs, Gospels, Letters",
+    accent: { light: "#8a6212", dark: "#d9b25f" },
     episodes: [
       ep(2, 1, "Honour With Thy Substance", "PRO", "Proverbs", 3, 6, "Trust, not cleverness, directs your path. And the first fruits of your increase say who you really trust.", "Jesus names the one master you cannot serve alongside God."),
       ep(2, 2, "Two Masters", "MAT", "Matthew", 6, 7, "Treasure, moths, rust and thieves. Where your treasure is, there your heart will be also. Then comes the command that reorders everything: seek ye first.", "A man with full barns makes one fatal plan."),
@@ -82,6 +96,7 @@ export const seasons: Season[] = [
     gradient: "from-[#2b1f3a] to-[#0d1117]",
     status: "live",
     genre: "1 and 2 Samuel, Psalms",
+    accent: { light: "#6a4a86", dark: "#b99ade" },
     episodes: [
       ep(3, 1, "The Youngest Son", "1SA", "1 Samuel", 16, 5, "Samuel is sent to anoint a king. Seven impressive brothers are rejected, because the Lord looketh on the heart.", "A giant is waiting in the valley of Elah."),
       ep(3, 2, "Five Smooth Stones", "1SA", "1 Samuel", 17, 9, "An army frozen by fear, and a teenage shepherd who will not wear the king's armour. You know the ending. Read how he got there.", "The king who loved him now wants him dead."),
@@ -100,6 +115,7 @@ export const seasons: Season[] = [
     gradient: "from-[#3a1a14] to-[#0d1117]",
     status: "live",
     genre: "Mark",
+    accent: { light: "#8e2f3c", dark: "#e78d94" },
     episodes: [
       ep(4, 1, "A Voice in the Wilderness", "MRK", "Mark", 1, 6, "No birth story, no warm-up. Mark opens with a wild prophet, a baptism, a voice from heaven, and Jesus already on the move.", "A storm that terrifies fishermen."),
       ep(4, 2, "Peace, Be Still", "MRK", "Mark", 4, 6, "Parables about seeds, then a storm on the lake. Jesus sleeps, the disciples panic, and three words silence the sea.", "A rich young man asks the right question."),
@@ -117,6 +133,7 @@ export const seasons: Season[] = [
     gradient: "from-[#5a2a0e] via-[#2b140a] to-[#0d1117]",
     status: "soon",
     genre: "Acts",
+    accent: { light: "#a54a12", dark: "#f0a05c" },
     episodes: [],
   },
   {
@@ -127,6 +144,7 @@ export const seasons: Season[] = [
     gradient: "from-[#0f2a2a] via-[#0b1a1f] to-[#0d1117]",
     status: "soon",
     genre: "Revelation",
+    accent: { light: "#1f6f6a", dark: "#74c6bd" },
     episodes: [],
   },
 ];
@@ -147,4 +165,9 @@ export function nextPremiere(now = new Date()): { season: Season; at: Date } | n
     if (!best || at < best.at) best = { season, at };
   }
   return best;
+}
+
+/** The season's colour for the skin currently in use. */
+export function accentOf(season: Pick<Season, "accent">, skin: "light" | "dark") {
+  return season.accent[skin];
 }

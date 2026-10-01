@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Copy, MessageCircle, Sparkles } from "lucide-react";
 import { useProfile, GOALS } from "../app/profile";
 import { useApp, wa } from "../app/store";
+import { nextEpisode } from "../app/helpers";
 import { Mark, EASE } from "../berean/ui";
 
 function Field({
@@ -34,13 +35,17 @@ function Field({
 
 export default function Onboarding({ onDone }: { onDone: () => void }) {
   const { complete, profile } = useProfile();
-  const { openReader } = useApp();
+  const { openReader, done } = useApp();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [church, setChurch] = useState("");
   const [goal, setGoal] = useState<string>("");
   const [copied, setCopied] = useState(false);
+
+  // Everyone begins at Season 1, Episode 1 — and a returning reader resumes
+  // exactly where the path left off. Never hard-code an episode here.
+  const start = nextEpisode(done);
 
   const canNext = step === 0 ? name.trim().length > 0 : step === 1 ? true : goal !== "";
 
@@ -185,12 +190,31 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                   <button
                     onClick={() => {
                       onDone();
-                      openReader({ bookId: "JHN", chapter: 1, episodeId: "s4e1" });
+                      if (start) {
+                        openReader({
+                          bookId: start.ep.bookId,
+                          chapter: start.ep.chapter,
+                          episodeId: start.ep.id,
+                        });
+                      }
                     }}
-                    className="flex items-center justify-center gap-2 rounded-2xl border border-line px-6 py-4 font-fraunces text-lg font-semibold text-parchment hover:border-gold/50"
+                    className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-line px-6 py-4 font-fraunces text-lg font-semibold text-parchment hover:border-gold/50"
                   >
-                    Start reading: Season 4, Episode 1
+                    <span>
+                      {start
+                        ? `Start reading: Season ${start.season.n}, Episode ${start.ep.n}`
+                        : "Start reading"}
+                    </span>
+                    {start && (
+                      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-mist">
+                        “{start.ep.title}” · {start.ep.book} {start.ep.chapter} · {start.ep.minutes} min
+                      </span>
+                    )}
                   </button>
+                  <p className="text-center font-newsreader text-[13px] leading-relaxed text-mist">
+                    Seasons open one after another: finish an episode and the next unlocks. The Bible itself is never
+                    locked — you can open any chapter any time.
+                  </p>
                   <button onClick={onDone} className="w-full py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-mist hover:text-parchment">
                     I'll explore first
                   </button>

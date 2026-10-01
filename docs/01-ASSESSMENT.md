@@ -43,9 +43,9 @@ and users will find the simulated parts.
 | **The Room (chat)** | **Simulated.** `BroadcastChannel` syncs *browser tabs on one device*. The other "people" are seeded messages |
 | **"18,432 reading now"**, "watching" counts, the activity ticker ("Kwame in Accra finished…") | **Invented.** Random numbers in `useLiveCount` and `data/community.ts` |
 | **Season 5 premiere countdown** | **Fake.** It always counts to "next Sunday 18:00" and resets weekly; the episode never actually releases |
-| **Cell group, group streak, nudge-on-WhatsApp** | **Hard-coded fixtures** (`cellGroup` in `data/berean.ts`) |
-| **Pastor dashboard** ("61% read this week", "+37 points", GHS 150 plan) | **Hard-coded fixtures** |
-| **Sermon builder** | **Real UI, template logic**: picks from a fixed table by topic; the "thinking…" pause is a `setTimeout` |
+| **Cell group, group streak, nudge-on-WhatsApp** | **Hard-coded fixtures** (`cellGroup` in `data/berean.ts`), labelled "Sample preview" |
+| **Pastor dashboard** ("61% read this week", "+37 points", GHS 150 plan) | **Fixed 2026-10-01.** The invented congregation is gone. Church insights now shows this device's real numbers and states plainly that congregation numbers need accounts |
+| **Sermon builder** | **Real UI, template logic**: picks from a fixed table by topic and real references. No AI and no fake pause. Outlines save on this device and feed the Sunday → Monday view |
 | **Accounts / profile / "Signed in on this device"** | **Local profile.** No sign-in exists |
 
 ## Findings, most serious first
@@ -161,3 +161,18 @@ Done since this assessment was written, at your request:
 Still open: no router, no tests beyond the database checks, no CI, the open AI Worker, the free
 Bible API, thin content (25 episodes; Season 5 has none, Season 6 has none), no moderation,
 privacy policy or account deletion in the UI. Also new: **the GitHub repo is public**.
+
+## Status update, 2026-10-01 (Pastor Studio)
+
+At your request: the Pastor Studio no longer runs on invented people. The `sermon` and `church`
+fixtures were **deleted** from `data/berean.ts`, so they cannot be rendered again by accident.
+
+| Screen | Now |
+|---|---|
+| **Sermon builder** | Builds from the real topic table and real references, with no fake "thinking" pause. Outlines **save on this device** (`berean:sermons:v1`) and can be deleted again. "Publish to congregation · 248 members notified" is gone — nothing here sends anything by itself, and the screen says what publishing will need |
+| **Sunday → Monday** | Works from the pastor's **own saved outline** (picker when there are several): its title, date, points and references, with the real bundled KJV text where it exists and the reader for the rest. No invented preacher, church, or "142/248 read this week" meter |
+| **Church insights** | Shows **only real numbers from this device** (streak, days read this week, chapters, episodes, questions, saved verses). The congregation panel states that nobody is connected yet and lists exactly what will appear when accounts exist. The GHS 150 plan is labelled *not on sale yet* |
+
+What still needs accounts before it can be real: publishing a sermon to members, member and
+cell-group progress, weekly reports and visitor follow-up. The schema for all of it is already in
+`supabase/migrations/0001_init.sql`; the screens stay honest until it runs somewhere (milestone 2).
